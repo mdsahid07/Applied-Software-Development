@@ -1,0 +1,121 @@
+
+@startuml
+title Patient Appointment Management System (PAMS) - Domain Model
+
+' Skin / style (optional)
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+' =====================
+' Classes & Attributes
+' =====================
+
+class Patient {
+  +patientId: Long
+  +firstName: String
+  +lastName: String
+  +phone: String
+  +email: String
+  +address: String
+  +dateOfBirth: LocalDate
+}
+
+class Dentist {
+  +dentistId: Long
+  +firstName: String
+  +lastName: String
+  +phone: String
+  +email: String
+  +specialization: String
+}
+
+class Appointment {
+  +appointmentId: Long
+  +date: LocalDate
+  +startTime: LocalTime
+  +endTime: LocalTime
+  +status: AppointmentStatus
+}
+
+enum AppointmentStatus {
+  BOOKED
+  CANCELLED
+  COMPLETED
+}
+
+class Surgery {
+  +surgeryId: Long
+  +name: String
+  +address: String
+  +phone: String
+}
+
+class Bill {
+  +billId: Long
+  +amount: BigDecimal
+  +status: BillStatus
+  +issuedOn: LocalDate
+  +dueOn: LocalDate
+}
+
+enum BillStatus {
+  PAID
+  UNPAID
+  PARTIALLY_PAID
+}
+
+class OfficeManager {
+  +managerId: Long
+  +firstName: String
+  +lastName: String
+  +phone: String
+  +email: String
+}
+
+' =====================
+' Associations
+' =====================
+
+' A Patient can have zero or many Appointments
+Patient "1" -- "0..*" Appointment : has >
+
+' A Dentist can have zero or many Appointments
+Dentist "1" -- "0..*" Appointment : assigned to >
+
+' Each Appointment occurs at exactly one Surgery (location)
+Surgery "1" -- "0..*" Appointment : hosts >
+
+' A Patient can have zero or many Bills
+Patient "1" -- "0..*" Bill : owes >
+
+' OfficeManager books Appointments and registers staff/patients (associative/documenting)
+OfficeManager ..> Appointment : books / cancels
+OfficeManager ..> Patient : registers
+OfficeManager ..> Dentist : registers
+
+' =====================
+' Business Rules (documented as notes)
+' =====================
+
+note right of Dentist
+A Dentist cannot have more than
+5 appointments in any given week.
+(Enforced by application/service logic)
+end note
+
+note bottom of Patient
+A Patient with any UNPAID bills
+cannot request a new appointment
+until outstanding bills are settled.
+(Enforced by application/service logic)
+end note
+
+note right of Appointment
+An Appointment links exactly:
+- 1 Patient
+- 1 Dentist
+- 1 Surgery
+and has a date/time and status.
+end note
+
+@enduml
